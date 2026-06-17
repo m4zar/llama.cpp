@@ -141,14 +141,7 @@ llama_model_qwen2::graph::graph(const llama_model & model, const llm_graph_param
     cb(cur, "result_norm", -1);
     res->t_embd = cur;
 
-    // lm_head
-    cur = build_lora_mm(model.output, cur, model.output_s);
-
-    if (model.output_b != nullptr) {
-        cur = ggml_add(ctx0, cur, model.output_b);
-    }
-    cb(cur, "result_output", -1);
-    res->t_logits = cur;
+    cur = build_lm_head(cur, model.output, model.output_s, model.output_b);
 
     ggml_build_forward_expand(gf, cur);
 }

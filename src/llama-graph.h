@@ -853,6 +853,17 @@ struct llm_graph_context {
               ggml_tensor * cur,
               ggml_tensor * w_s = nullptr) const;
 
+    // build the lm_head (vocab projection), skipped in embeddings mode.
+    // final_logit_softcapping is opt-in (0 = none): callers that need it pass
+    // hparams.f_final_logit_softcapping explicitly, because that field has a
+    // non-zero default (30.0f) and cannot be inferred safely inside the helper.
+    ggml_tensor * build_lm_head(
+              ggml_tensor * cur,
+              ggml_tensor * output,
+              ggml_tensor * output_s = nullptr,
+              ggml_tensor * output_b = nullptr,
+              float         final_logit_softcapping = 0.0f) const;
+
     // do mat_mul_id, while optionally apply lora and per-expert scale
     ggml_tensor * build_lora_mm_id(
               ggml_tensor * w,   // ggml_tensor * as

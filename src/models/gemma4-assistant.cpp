@@ -190,14 +190,19 @@ llama_model_gemma4_assistant::graph::graph(const llama_model & model, const llm_
     cur = build_norm(cur, model.output_norm, nullptr, LLM_NORM_RMS, -1);
     cb(cur, "result_norm", -1);
 
-    ggml_tensor * logits = build_lora_mm(model.output, cur);
-    cb(logits, "result_output", -1);
-    res->t_logits = logits;
+    ggml_tensor * logits = nullptr;
+    if (!cparams.embeddings) {
+        logits = build_lora_mm(model.output, cur);
+        cb(logits, "result_output", -1);
+        res->t_logits = logits;
+    }
 
     ggml_tensor * h_next = ggml_mul_mat(ctx0, model.nextn_proj_post, cur);
     cb(h_next, "h_nextn", -1);
     res->t_h_nextn = h_next;
 
-    ggml_build_forward_expand(gf, logits);
+    if (logits) {
+        ggml_build_forward_expand(gf, logits);
+    }
     ggml_build_forward_expand(gf, h_next);
 }

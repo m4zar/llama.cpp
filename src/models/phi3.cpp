@@ -179,14 +179,16 @@ llama_model_phi3::graph<iswa>::graph(const llama_model & model, const llm_graph_
     cb(cur, "result_norm", -1);
     res->t_embd = cur;
 
-    cur = build_lora_mm(model.output, cur, model.output_s);
+    if (!cparams.embeddings) {
+        cur = build_lora_mm(model.output, cur, model.output_s);
 
-    if (model.output_b != nullptr) {
-        cb(cur, "result_output_no_bias", -1);
-        cur = ggml_add(ctx0, cur, model.output_b);
+        if (model.output_b != nullptr) {
+            cb(cur, "result_output_no_bias", -1);
+            cur = ggml_add(ctx0, cur, model.output_b);
+        }
+        cb(cur, "result_output", -1);
+        res->t_logits = cur;
     }
-    cb(cur, "result_output", -1);
-    res->t_logits = cur;
 
     ggml_build_forward_expand(gf, cur);
 }

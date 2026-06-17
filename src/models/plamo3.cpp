@@ -186,8 +186,7 @@ llama_model_plamo3::graph<iswa>::graph(const llama_model & model, const llm_grap
     cur = build_norm(cur, model.output_norm, NULL, LLM_NORM_RMS, -1);
     res->t_embd = cur;
 
-    cur = build_lora_mm(model.output, cur, model.output_s);
-    res->t_logits = cur;
+    cur = build_lm_head(cur, model.output, model.output_s);
 
     ggml_build_forward_expand(gf, cur);
 }

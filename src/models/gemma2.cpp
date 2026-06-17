@@ -162,16 +162,7 @@ llama_model_gemma2::graph::graph(const llama_model & model, const llm_graph_para
     cb(cur, "result_norm", -1);
     res->t_embd = cur;
 
-    // lm_head
-    cur = build_lora_mm(model.output, cur, model.output_s);
-
-    // final logit soft-capping
-    cur = ggml_scale(ctx0, cur, 1.0f / hparams.f_final_logit_softcapping);
-    cur = ggml_tanh(ctx0, cur);
-    cur = ggml_scale(ctx0, cur, hparams.f_final_logit_softcapping);
-
-    cb(cur, "result_output", -1);
-    res->t_logits = cur;
+    cur = build_lm_head(cur, model.output, model.output_s, nullptr, hparams.f_final_logit_softcapping);
 
     ggml_build_forward_expand(gf, cur);
 }

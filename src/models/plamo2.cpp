@@ -188,14 +188,16 @@ llama_model_plamo2::graph::graph(const llama_model & model, const llm_graph_para
 
     res->t_embd = cur;
 
-    // lm_head
-    cur = build_lora_mm(model.output, cur, model.output_s);
-    cb(cur, "result_output", -1);
+    if (!cparams.embeddings) {
+        // lm_head
+        cur = build_lora_mm(model.output, cur, model.output_s);
+        cb(cur, "result_output", -1);
 
-    // Explicitly mark as output tensor to ensure proper backend assignment
-    ggml_set_output(cur);
+        // Explicitly mark as output tensor to ensure proper backend assignment
+        ggml_set_output(cur);
 
-    res->t_logits = cur;
+        res->t_logits = cur;
+    }
 
     ggml_build_forward_expand(gf, cur);
 }

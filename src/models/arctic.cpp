@@ -171,10 +171,7 @@ llama_model_arctic::graph::graph(const llama_model & model, const llm_graph_para
     res->t_embd = cur;
 
     // lm_head
-    cur = build_lora_mm(model.output, cur, model.output_s);
-
-    cb(cur, "result_output", -1);
-    res->t_logits = cur;
+    cur = build_lm_head(cur, model.output, model.output_s);
 
     ggml_build_forward_expand(gf, cur);
 }

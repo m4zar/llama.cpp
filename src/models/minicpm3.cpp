@@ -245,16 +245,18 @@ llama_model_minicpm3::graph::graph(const llama_model & model, const llm_graph_pa
     cb(cur, "result_norm", -1);
     res->t_embd = cur;
 
-    // lm_head scaling
-    const float scale_lmhead = float(n_embd_base)/float(n_embd);
-    cur = ggml_scale(ctx0, cur, scale_lmhead);
-    cb(cur, "lmhead_scaling", -1);
+    if (!cparams.embeddings) {
+        // lm_head scaling
+        const float scale_lmhead = float(n_embd_base)/float(n_embd);
+        cur = ggml_scale(ctx0, cur, scale_lmhead);
+        cb(cur, "lmhead_scaling", -1);
 
-    // lm_head
-    cur = build_lora_mm(model.output, cur, model.output_s);
+        // lm_head
+        cur = build_lora_mm(model.output, cur, model.output_s);
 
-    cb(cur, "result_output", -1);
-    res->t_logits = cur;
+        cb(cur, "result_output", -1);
+        res->t_logits = cur;
+    }
 
     ggml_build_forward_expand(gf, cur);
 }

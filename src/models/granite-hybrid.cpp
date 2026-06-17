@@ -186,14 +186,16 @@ llama_model_granite_hybrid::graph::graph(const llama_model & model, const llm_gr
     res->t_embd = cur;
 
     // lm_head
-    cur = build_lora_mm(model.output, cur, model.output_s);
+    if (!cparams.embeddings) {
+        cur = build_lora_mm(model.output, cur, model.output_s);
 
-    // For Granite architectures - scale logits
-    if (hparams.f_logit_scale) {
-        cur = ggml_scale(ctx0, cur, 1.0f / hparams.f_logit_scale);
+        // For Granite architectures - scale logits
+        if (hparams.f_logit_scale) {
+            cur = ggml_scale(ctx0, cur, 1.0f / hparams.f_logit_scale);
+        }
+        cb(cur, "result_output", -1);
+        res->t_logits = cur;
     }
-    cb(cur, "result_output", -1);
-    res->t_logits = cur;
 
     ggml_build_forward_expand(gf, cur);
 }

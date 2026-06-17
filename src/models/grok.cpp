@@ -206,18 +206,20 @@ llama_model_grok::graph::graph(const llama_model & model, const llm_graph_params
     res->t_embd = cur;
 
     // lm_head
-    cur = build_lora_mm(model.output, cur, model.output_s);
+    if (!cparams.embeddings) {
+        cur = build_lora_mm(model.output, cur, model.output_s);
 
-    cur = ggml_scale(ctx0, cur, hparams.f_logit_scale);
+        cur = ggml_scale(ctx0, cur, hparams.f_logit_scale);
 
-    // final logit soft-capping
-    if (hparams.f_final_logit_softcapping) {
-        cur = ggml_scale(ctx0, cur, 1.0f / hparams.f_final_logit_softcapping);
-        cur = ggml_tanh(ctx0, cur);
-        cur = ggml_scale(ctx0, cur, hparams.f_final_logit_softcapping);
+        // final logit soft-capping
+        if (hparams.f_final_logit_softcapping) {
+            cur = ggml_scale(ctx0, cur, 1.0f / hparams.f_final_logit_softcapping);
+            cur = ggml_tanh(ctx0, cur);
+            cur = ggml_scale(ctx0, cur, hparams.f_final_logit_softcapping);
+        }
+        cb(cur, "result_output", -1);
+        res->t_logits = cur;
     }
-    cb(cur, "result_output", -1);
-    res->t_logits = cur;
 
     ggml_build_forward_expand(gf, cur);
 }

@@ -181,24 +181,26 @@ llama_model_chameleon::graph::graph(const llama_model & model, const llm_graph_p
     res->t_embd = cur;
 
     // lm_head
-    cur = build_lora_mm(model.output, cur, model.output_s);
-    cb(cur, "result_output_with_img_logits", -1);
+    if (!cparams.embeddings) {
+        cur = build_lora_mm(model.output, cur, model.output_s);
+        cb(cur, "result_output_with_img_logits", -1);
 
-    // TODO: this suppresses the output of image tokens, which is required to enable text-only outputs.
-    // Needs to be removed once image outputs are supported.
-    int img_token_end_idx = 8196;
-    int img_token_start_idx = 4;
-    int num_img_tokens = img_token_end_idx - img_token_start_idx;
-    // creates 1d tensor of size num_img_tokens and values -FLT_MAX,
-    // which ensures that text token values are always at least larger than image token values
-    ggml_tensor * img_logits = ggml_new_tensor_1d(ctx0, GGML_TYPE_F32, num_img_tokens);
-    img_logits = ggml_clamp(ctx0, img_logits, -FLT_MAX, -FLT_MAX);
-    cb(img_logits, "img_logits", -1);
+        // TODO: this suppresses the output of image tokens, which is required to enable text-only outputs.
+        // Needs to be removed once image outputs are supported.
+        int img_token_end_idx = 8196;
+        int img_token_start_idx = 4;
+        int num_img_tokens = img_token_end_idx - img_token_start_idx;
+        // creates 1d tensor of size num_img_tokens and values -FLT_MAX,
+        // which ensures that text token values are always at least larger than image token values
+        ggml_tensor * img_logits = ggml_new_tensor_1d(ctx0, GGML_TYPE_F32, num_img_tokens);
+        img_logits = ggml_clamp(ctx0, img_logits, -FLT_MAX, -FLT_MAX);
+        cb(img_logits, "img_logits", -1);
 
-    cur = ggml_set_1d(ctx0, cur, img_logits, ggml_element_size(cur) * img_token_start_idx);
+        cur = ggml_set_1d(ctx0, cur, img_logits, ggml_element_size(cur) * img_token_start_idx);
 
-    cb(cur, "result_output", -1);
-    res->t_logits = cur;
+        cb(cur, "result_output", -1);
+        res->t_logits = cur;
+    }
 
     ggml_build_forward_expand(gf, cur);
 }

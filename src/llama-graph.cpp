@@ -1113,6 +1113,40 @@ ggml_tensor * llm_graph_context::build_lora_mm(
     return res;
 }
 
+// build the lm_head (vocab projection), skipping it entirely in embeddings
+// mode where the logits are never read. handles the common output path:
+// optional per-tensor output scale (via build_lora_mm), optional output bias,
+// and optional final-logit soft-capping. archs with extra logit
+// post-processing (logit scaling, suppress-token bias, a pre-bias callback,
+// ...) keep an inline `if (!cparams.embeddings)` gate instead.
+ggml_tensor * llm_graph_context::build_lm_head(
+        ggml_tensor * cur,
+        ggml_tensor * output,
+        ggml_tensor * output_s,
+        ggml_tensor * output_b,
+        float         final_logit_softcapping) const {
+    if (cparams.embeddings) {
+        return cur;
+    }
+
+    cur = build_lora_mm(output, cur, output_s);
+
+    if (output_b != nullptr) {
+        cur = ggml_add(ctx0, cur, output_b);
+    }
+
+    if (final_logit_softcapping != 0.0f) {
+        cur = ggml_scale(ctx0, cur, 1.0f / final_logit_softcapping);
+        cur = ggml_tanh (ctx0, cur);
+        cur = ggml_scale(ctx0, cur,        final_logit_softcapping);
+    }
+
+    cb(cur, "result_output", -1);
+    res->t_logits = cur;
+
+    return cur;
+}
+
 ggml_tensor * llm_graph_context::build_lora_mm_id(
           ggml_tensor * w,   // ggml_tensor * as
           ggml_tensor * cur, // ggml_tensor * b
