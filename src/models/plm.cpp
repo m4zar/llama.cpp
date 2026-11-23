@@ -128,11 +128,6 @@ llama_model_plm::graph::graph(const llm_graph_params & params) : llm_graph_conte
             v_states = ggml_cont(ctx0, v_states);
             cb(v_states, "v_states", il);
 
-            v_states = ggml_view_2d(ctx0, v_states, hparams.n_embd_head_v() * n_head, n_tokens,
-                    ggml_row_size(kv->type, hparams.n_embd_head_v() * n_head),
-                    0);
-            cb(v_states, "v_states", il);
-
             q = build_rope(q, inp_pos, il);
             q = ggml_rope_set_offset(q, n_embd_head_qk_nope);
             cb(q, "q_rope", il);

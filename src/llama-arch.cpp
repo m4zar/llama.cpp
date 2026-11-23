@@ -1552,6 +1552,7 @@ bool llm_arch_supports_sm_tensor(const llm_arch & arch) {
         case LLM_ARCH_MPT:
         case LLM_ARCH_PLAMO2:
         case LLM_ARCH_MINICPM3:
+        case LLM_ARCH_PLM:
         case LLM_ARCH_GEMMA3N:
         case LLM_ARCH_MAMBA:
         case LLM_ARCH_MAMBA2:
